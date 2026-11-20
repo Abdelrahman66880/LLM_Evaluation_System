@@ -32,11 +32,3 @@ def extract_paragraphs_from_pdf(file_path: str) -> List[str]:
     
     
     return paragraphs
-
-
-paragraphs = extract_paragraphs_from_pdf("../PDFs/Penguins_ACL.pdf")
-
-for para in paragraphs:
-    print("*" * 50)
-    print(para)
-    print("*" * 50)
