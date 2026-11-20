@@ -1,2 +1,13 @@
 .env
-*/__pycache__/
+__pycache__/
+.venv/
+.data/
+data/
+*.py[cod]
+*.egg-info/
+dist/
+.ruff_cache/
+.pytest_cache/
+.deepeval/
+evaluated_results*.jsonl
+results*.json
