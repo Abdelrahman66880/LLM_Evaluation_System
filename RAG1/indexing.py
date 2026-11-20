@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -88,25 +89,44 @@ class OpenRouterEmbeddings(Embeddings):
 
 
 def index_pdf(
-    file_path: str,
+    file_path: str | Path,
     *,
     embedding_model: str | None = None,
     batch_size: int = 64,
 ) -> InMemoryVectorStore:
-    """Extract paragraphs from a PDF and add them to an in-memory index.
+    """Extract paragraphs from a PDF or all PDFs in a directory and index them.
 
     Query the returned store with LangChain's ``similarity_search``. The index
     is in memory only, so it must be rebuilt after restarting the application.
     """
-    paragraphs = extract_paragraphs_from_pdf(file_path)
-    if not paragraphs:
-        raise ValueError(f"No text paragraphs were found in PDF: {file_path}")
+    source = Path(file_path).expanduser().resolve()
+    if source.is_file():
+        if source.suffix.lower() != ".pdf":
+            raise ValueError(f"Expected a PDF file or directory, got: {source}")
+        pdf_files = [source]
+    elif source.is_dir():
+        pdf_files = sorted(
+            item for item in source.rglob("*") if item.is_file() and item.suffix.lower() == ".pdf"
+        )
+        if not pdf_files:
+            raise ValueError(f"No PDF files found in directory: {source}")
+    else:
+        raise FileNotFoundError(f"PDF file or directory does not exist: {source}")
+
+    texts: list[str] = []
+    metadatas: list[dict[str, str | int]] = []
+    for pdf_file in pdf_files:
+        paragraphs = extract_paragraphs_from_pdf(str(pdf_file))
+        texts.extend(paragraphs)
+        metadatas.extend(
+            {"source": str(pdf_file), "paragraph": number}
+            for number in range(len(paragraphs))
+        )
+    if not texts:
+        raise ValueError(f"No text paragraphs were found in PDF source: {source}")
 
     embeddings = OpenRouterEmbeddings(model=embedding_model, batch_size=batch_size)
     store = InMemoryVectorStore(embeddings)
-    store.add_texts(
-        paragraphs,
-        metadatas=[{"source": file_path, "paragraph": number} for number in range(len(paragraphs))],
-    )
+    store.add_texts(texts, metadatas=metadatas)
     return store
 
