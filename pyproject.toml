@@ -1,22 +1,27 @@
 [project]
 name = "llm-evaluation-system"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "A PDF retrieval-augmented question answering and evaluation system"
 readme = "README.md"
 authors = [
     { name = "Abdelrahman66880", email = "abdofathi317@gmail.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "dotenv>=0.9.9",
-    "langchain>=1.5.2",
+    "deepeval>=4.3.4",
+    "langchain-core>=1.0.0",
     "pydantic>=2.14.4",
     "pymupdf>=2.1",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.scripts]
-llm-evaluation-system = "llm_evaluation_system:main"
+llm-evaluation-system = "cli:main"
 
 [build-system]
 requires = ["uv_build>=0.13.9,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = ["cli", "config", "evaluation", "providers", "rag", "schemas"]
